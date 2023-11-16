@@ -24,7 +24,31 @@ RESPONSE_FORMAT_CAP_REF = "RESPONSE_FORMAT"
 SQL_DELIMITER = "---------"
 
 
+import argparse
+import os
+
 def main():
+    parser = argparse.ArgumentParser(description='Process command line arguments.')
+    parser.add_argument('--prompt', type=str, help='Prompt for the AI')
+    parser.add_argument('--connection-string', type=str, help='Database connection string')
+    parser.add_argument('--openai-api-key', type=str, help='OpenAI API key')
+
+    args = parser.parse_args()
+
+    DB_URL = os.getenv('DB_URL')
+    OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
+
+    if DB_URL is None:
+        if args.connection_string is not None:
+            DB_URL = args.connection_string
+        else:
+            raise ValueError('DB_URL is not set. Please set the DB_URL environment variable or use the --connection-string flag.')
+
+    if OPENAI_API_KEY is None:
+        if args.openai_api_key is not None:
+            OPENAI_API_KEY = args.openai_api_key
+        else:
+            raise ValueError('OPENAI_API_KEY is not set. Please set the OPENAI_API_KEY environment variable or use the --openai-api-key flag.')
     parser = argparse.ArgumentParser()
     parser.add_argument("--prompt", help="The prompt for the AI")
     args = parser.parse_args()
