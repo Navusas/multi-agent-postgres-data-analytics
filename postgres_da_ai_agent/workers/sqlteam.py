@@ -64,5 +64,9 @@ class SqlTeam:
             print(f"💰📊🤖 Organization Cost: {data_eng_cost}, tokens: {data_eng_tokens}")
 
             sql_message = data_eng_messages[-3]
-            sql_query = sql_message['function_call']['arguments']['sql']
+            if isinstance(sql_message, dict):
+                sql_query = sql_message.get('function_call', {}).get('arguments', {}).get('sql')
+            else:
+                print(f"Unexpected sql_message type: {type(sql_message)}. Expected dict.")
+                sql_query = None
             return sql_query
