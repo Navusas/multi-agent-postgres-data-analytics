@@ -159,6 +159,10 @@ class Orchestrator:
                     print(f"✅ Orchestrator was successful")
                 else:
                     print(f"❌ Orchestrator failed")
+                    # If the last message was not approved, go back to the previous agent
+                    if "NOT APPROVED" in self.latest_message:
+                        print(f"Going back to the previous agent to generate a new SQL query.")
+                        self.basic_chat(self.agents[idx - 1], self.agents[idx], "The previous SQL query was not approved. Please generate a new SQL query.")
 
                 return was_successful, self.messages
 
