@@ -50,9 +50,12 @@ def get_sql_query():
     else:
         return jsonify({"message": "Too many tasks running. Please try again later."}), 429
 
-@app.route('/status', methods=['GET'])
-def status():
-    return jsonify(task_statuses)
+@app.route('/status/<task_id>', methods=['GET'])
+def status(task_id):
+    if task_id in task_statuses:
+        return jsonify(task_statuses[task_id])
+    else:
+        return jsonify({"message": "Task not found"}), 404
 
 
 def main():
