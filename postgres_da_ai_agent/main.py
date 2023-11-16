@@ -31,15 +31,26 @@ def background_task(prompt):
     task_status["message"] = "Task completed successfully"
 
 @app.route('/get-sql-query', methods=['POST'])
-def get_sql_query():
-    data = request.json
-    prompt = data.get("prompt", "")
+class DatabaseRequest:
+    def __init__(self, data):
+        self.database = data['database']
+        self.request = data['request']
 
-    if not prompt:
+def get_sql_query():
+    api_key = request.headers.get('api-key')
+    if not api_key:
+        return jsonify({"message": "No API key provided"}), 400
+    
+    print(request)
+    
+    data = request.json
+    db_request = DatabaseRequest(data)
+
+    if not db_request.request.get("Prompt"):
         return jsonify({"message": "No prompt provided"}), 400
 
     # Start the background task
-    thread = threading.Thread(target=background_task, args=(prompt,))
+    thread = threading.Thread(target=background_task, args=(db_request.request.get("Prompt"),))
     thread.start()
 
     return jsonify({"message": "Task started", "status": "running"}), 202
