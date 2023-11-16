@@ -28,10 +28,12 @@ def background_task(prompt):
     task_status["success"] = True
     task_status["message"] = "Task completed successfully"
 
+from typing import Dict, Union
+
 class DatabaseRequest:
-    def __init__(self, data):
-        self.database = data['database']
-        self.request = data['request']
+    def __init__(self, data: Dict[str, Union[DatabaseRequest, PromptRequest]]):
+        self.database: DatabaseRequest = data['database']
+        self.request: PromptRequest = data['request']
 
 @app.route('/get-sql-query', methods=['POST'])
 def get_sql_query():
