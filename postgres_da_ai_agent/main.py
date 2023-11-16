@@ -4,6 +4,8 @@ import threading
 import dotenv
 import argparse
 
+from postgres_da_ai_agent.workers.sqlteam import Request, SqlTeam
+
 dotenv.load_dotenv()
 
 app = Flask(__name__)
@@ -11,7 +13,7 @@ app = Flask(__name__)
 # Global variable to store task status
 task_status = {"running": False, "success": False, "message": ""}
 
-def background_task(prompt):
+def background_task(taskArgs):
     """
     The function to handle the background task.
     This is where you'll incorporate your existing logic.
@@ -20,20 +22,13 @@ def background_task(prompt):
     task_status["running"] = True
     task_status["success"] = False
 
-    # Your task logic goes here
-    # For example, handling the prompt with your existing code
+    team = SqlTeam(taskArgs)
+    team.Start()
 
     # Update task status upon completion
     task_status["running"] = False
     task_status["success"] = True
     task_status["message"] = "Task completed successfully"
-
-from typing import Dict, Union
-
-class DatabaseRequest:
-    def __init__(self, data: Dict[str, Union[DatabaseRequest, PromptRequest]]):
-        self.database: DatabaseRequest = data['database']
-        self.request: PromptRequest = data['request']
 
 @app.route('/get-sql-query', methods=['POST'])
 def get_sql_query():
@@ -41,16 +36,13 @@ def get_sql_query():
     if not api_key:
         return jsonify({"message": "No API key provided"}), 400
     
-    print(request)
+    requestBody = Request(data=request.json)
 
-    data = request.json
-    db_request = DatabaseRequest(data=data)
-
-    if not db_request.request.get("Prompt"):
+    if not requestBody.user_prompt:
         return jsonify({"message": "No prompt provided"}), 400
 
     # Start the background task
-    thread = threading.Thread(target=background_task, args=(db_request.request.get("Prompt"),))
+    thread = threading.Thread(target=background_task, args=(requestBody,))
     thread.start()
 
     return jsonify({"message": "Task started", "status": "running"}), 202
