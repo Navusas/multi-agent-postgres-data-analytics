@@ -1,4 +1,4 @@
-from postgres_da_ai_agent.modules.db import PostgresManager
+from postgres_da_ai_agent.modules.database.postgres import PostgresManager
 from postgres_da_ai_agent.agents import agents
 from postgres_da_ai_agent.modules import embeddings
 from postgres_da_ai_agent.modules import llm
@@ -16,6 +16,7 @@ class Request:
         self.db_version=db.get("version")
         self.db_conn_string=db.get("connection_string")
         self.user_prompt=request.get("prompt")
+        self.model=request.get("model")
 
 class SqlTeam:
     def __init__(self, requestDetails: Request):
@@ -61,3 +62,5 @@ class SqlTeam:
             print(f"Data Eng Cost: {data_eng_cost}, tokens: {data_eng_tokens}")
 
             print(f"💰📊🤖 Organization Cost: {data_eng_cost}, tokens: {data_eng_tokens}")
+
+            return data_eng_messages[-3]
