@@ -69,7 +69,11 @@ class SqlTeam:
                 sql_query = sql_message.get('function_call', {}).get('arguments', {}).get('sql')
             elif isinstance(sql_message, str):
                 print(f"sql_message is a string: {sql_message}")
-                sql_query = sql_message
+                try:
+                    sql_query = json.loads(sql_message).get('function_call', {}).get('arguments', {}).get('sql')
+                except json.JSONDecodeError:
+                    print(f"Failed to parse sql_message as JSON: {sql_message}")
+                    sql_query = None
             else:
                 print(f"Unexpected sql_message type: {type(sql_message)}. Expected dict or string.")
                 sql_query = None
