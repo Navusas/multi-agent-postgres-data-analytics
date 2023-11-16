@@ -9,14 +9,15 @@ class DatabaseEmbedder:
         self.map_name_to_embeddings = {}
         self.map_name_to_table_def = {}
 
-    def add_table(self, table_name: str, text_representation: str):
+    def add_table(self, table_name: str, text_representation: dict):
+        text_representation_str = str(text_representation)
         self.map_name_to_embeddings[table_name] = self.compute_embeddings(
-            text_representation
+            text_representation_str
         )
 
-        self.map_name_to_table_def[table_name] = text_representation
+        self.map_name_to_table_def[table_name] = text_representation_str
 
-    def compute_embeddings(self, text):
+    def compute_embeddings(self, text: str):
         inputs = self.tokenizer(
             text, return_tensors="pt", truncation=True, padding=True, max_length=512
         )
