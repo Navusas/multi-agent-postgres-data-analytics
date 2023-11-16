@@ -1,5 +1,5 @@
 import os
-from postgres_da_ai_agent.modules.db import PostgresManager
+from postgres_da_ai_agent.modules.database.postgres import PostgresManager
 from postgres_da_ai_agent.modules import llm
 from postgres_da_ai_agent.modules import orchestrator
 from postgres_da_ai_agent.modules import file

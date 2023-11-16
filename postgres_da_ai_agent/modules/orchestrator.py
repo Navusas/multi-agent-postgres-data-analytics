@@ -8,6 +8,7 @@ class Orchestrator:
         self.name = name
         self.agents = agents
         self.messages = []
+        self.queries = []
         self.complete_keyword = "APPROVED"
         self.error_keyword = "ERROR"
 

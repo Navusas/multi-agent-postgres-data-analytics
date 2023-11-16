@@ -1,4 +1,5 @@
 import os
+import uuid
 from flask import Flask, jsonify, request
 import threading
 import dotenv
@@ -21,12 +22,13 @@ def background_task(task_id, taskArgs):
     task_statuses[task_id] = {"running": True, "success": False, "message": ""}
 
     team = SqlTeam(taskArgs)
-    team.Start()
+    response = team.Start()
 
     # Update task status upon completion
     task_statuses[task_id]["running"] = False
     task_statuses[task_id]["success"] = True
     task_statuses[task_id]["message"] = "Task completed successfully"
+    task_statuses[task_id]["response"] = response
 
 @app.route('/get-sql-query', methods=['POST'])
 def get_sql_query():
