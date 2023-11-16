@@ -10,25 +10,23 @@ dotenv.load_dotenv()
 
 app = Flask(__name__)
 
-# Global variable to store task status
-task_status = {"running": False, "success": False, "message": ""}
+# Global variable to store task statuses
+task_statuses = {}
 
-def background_task(taskArgs):
+def background_task(task_id, taskArgs):
     """
     The function to handle the background task.
     This is where you'll incorporate your existing logic.
     """
-    global task_status
-    task_status["running"] = True
-    task_status["success"] = False
+    task_statuses[task_id] = {"running": True, "success": False, "message": ""}
 
     team = SqlTeam(taskArgs)
     team.Start()
 
     # Update task status upon completion
-    task_status["running"] = False
-    task_status["success"] = True
-    task_status["message"] = "Task completed successfully"
+    task_statuses[task_id]["running"] = False
+    task_statuses[task_id]["success"] = True
+    task_statuses[task_id]["message"] = "Task completed successfully"
 
 @app.route('/get-sql-query', methods=['POST'])
 def get_sql_query():
@@ -41,15 +39,20 @@ def get_sql_query():
     if not requestBody.user_prompt:
         return jsonify({"message": "No prompt provided"}), 400
 
-    # Start the background task
-    thread = threading.Thread(target=background_task, args=(requestBody,))
-    thread.start()
+    # Generate a unique task ID
+    task_id = str(uuid.uuid4())
 
-    return jsonify({"message": "Task started", "status": "running"}), 202
+    # Start the background task
+    if len(task_statuses) < 20:
+        thread = threading.Thread(target=background_task, args=(task_id, requestBody,))
+        thread.start()
+        return jsonify({"message": "Task started", "status": "running", "task_id": task_id}), 202
+    else:
+        return jsonify({"message": "Too many tasks running. Please try again later."}), 429
 
 @app.route('/status', methods=['GET'])
 def status():
-    return jsonify(task_status)
+    return jsonify(task_statuses)
 
 
 def main():
