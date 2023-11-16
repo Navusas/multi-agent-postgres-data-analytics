@@ -19,6 +19,8 @@ class Request:
         self.user_prompt=request.get("prompt")
         self.model=request.get("model")
 
+from postgres_da_ai_agent.modules.sqlserverdb import SqlServerManager
+
 class SqlTeam:
     def __init__(self, requestDetails: Request):
         self.requestDetails = requestDetails
@@ -26,7 +28,14 @@ class SqlTeam:
     def Start(self):
         prompt = f"Fulfill this database query: {self.requestDetails.user_prompt}. "
 
-        with PostgresManager() as db:
+        if self.requestDetails.db_type == 'postgres':
+            db_manager = PostgresManager
+        elif self.requestDetails.db_type == 'sqlserver':
+            db_manager = SqlServerManager
+        else:
+            raise ValueError(f"Unsupported db_type: {self.requestDetails.db_type}")
+
+        with db_manager() as db:
             print(f"Connecting to database: {self.requestDetails.db_conn_string}")
             db.connect_with_url(self.requestDetails.db_conn_string)
 
