@@ -145,6 +145,11 @@ class Orchestrator:
             if self.last_message_is_func_call and self.has_functions(agent_a):
                 self.function_chat(agent_a, agent_b, self.latest_message)
 
+            # Check if the last message contains an error
+            if self.error_keyword in self.latest_message:
+                # Send a message back to the previous agent asking for a new SQL query
+                self.basic_chat(agent_b, agent_a, "The previous SQL query resulted in an error. Please generate a new SQL query.")
+
             if idx == self.total_agents - 2:
                 print(f"-------- Orchestrator Complete --------\n\n")
 
