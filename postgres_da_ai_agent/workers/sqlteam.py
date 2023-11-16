@@ -74,10 +74,10 @@ class SqlTeam:
 
                     # Step 3: Access the 'sql' key
                     sql_query = arguments_json.get('sql')
-
-                    print(sql_query)
                 else:
-                    print("No arguments found")
+                    print(f"❌ Orchestrator failed: No args found")
 
                 return sql_query
+            else:
+                print(f"❌ Orchestrator failed: No function call found")
             return None
