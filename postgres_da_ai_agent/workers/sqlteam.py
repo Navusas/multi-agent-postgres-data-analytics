@@ -63,4 +63,6 @@ class SqlTeam:
 
             print(f"💰📊🤖 Organization Cost: {data_eng_cost}, tokens: {data_eng_tokens}")
 
-            return data_eng_messages[-3]
+            sql_message = data_eng_messages[-3]
+            sql_query = sql_message['function_call']['arguments']['sql']
+            return sql_query
