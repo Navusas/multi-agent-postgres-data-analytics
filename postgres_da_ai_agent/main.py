@@ -1,3 +1,5 @@
+from datetime import date
+import datetime
 import os
 import uuid
 from flask import Flask, jsonify, request
@@ -19,7 +21,12 @@ def background_task(task_id, taskArgs):
     The function to handle the background task.
     This is where you'll incorporate your existing logic.
     """
-    task_statuses[task_id] = {"running": True, "success": False, "message": ""}
+    task_statuses[task_id] = {
+        "running": True, 
+        "success": False, 
+        "message": "",
+        "started": datetime.datetime.now()
+        }
 
     team = SqlTeam(taskArgs)
     response = team.Start()
@@ -29,6 +36,7 @@ def background_task(task_id, taskArgs):
     task_statuses[task_id]["success"] = True
     task_statuses[task_id]["message"] = "Task completed successfully"
     task_statuses[task_id]["response"] = response
+    task_statuses[task_id]["completed"] = datetime.datetime.now()
 
 @app.route('/get-sql-query', methods=['POST'])
 def get_sql_query():

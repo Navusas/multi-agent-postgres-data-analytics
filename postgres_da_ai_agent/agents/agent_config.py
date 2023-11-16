@@ -13,7 +13,7 @@ import autogen
 base_config = {
     "use_cache": False,
     "temperature": 0,
-    "config_list": autogen.config_list_from_models(["gpt-3.5-turbo"]),
+    "config_list": autogen.config_list_from_models(["gpt-4-1106-preview"]),
     "request_timeout": 120,
 }
 
