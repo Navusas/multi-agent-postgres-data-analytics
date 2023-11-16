@@ -81,16 +81,61 @@ class SqlServerManager:
         """
         self.cur.execute(get_def_stmt)
         rows = self.cur.fetchall()
-        create_table_stmt = "CREATE TABLE {} (\n".format(table_name)
-        for row in rows:
-            create_table_stmt += "{} {},\n".format(row[0], row[1])
-        create_table_stmt = create_table_stmt.rstrip(",\n") + "\n);"
-        return create_table_stmt
+        columns_info = [{row[0]: row[1]} for row in rows]
+        return columns_info
+    
+    def get_foreign_keys(self, table_name):
+        get_fk_stmt = f"""
+        SELECT kcu.COLUMN_NAME, ccu.TABLE_NAME AS foreign_table_name, ccu.COLUMN_NAME AS foreign_column_name 
+        FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS AS tc 
+        JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE AS kcu
+          ON tc.CONSTRAINT_NAME = kcu.CONSTRAINT_NAME
+        JOIN INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE AS ccu
+          ON ccu.CONSTRAINT_NAME = tc.CONSTRAINT_NAME
+        WHERE tc.CONSTRAINT_TYPE = 'FOREIGN KEY' AND tc.TABLE_NAME='{table_name}';
+        """
+        self.cur.execute(get_fk_stmt)
+        rows = self.cur.fetchall()
+        return [{row[0]: {"foreign_table": row[1], "foreign_column": row[2]}} for row in rows]
 
     def get_all_table_names(self):
         get_all_tables_stmt = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_TYPE = 'BASE TABLE'"
         self.cur.execute(get_all_tables_stmt)
         return [row[0] for row in self.cur.fetchall()]
+
+    def get_schema_name(self, table_name):
+        get_schema_stmt = f"""
+        SELECT TABLE_SCHEMA
+        FROM INFORMATION_SCHEMA.TABLES
+        WHERE TABLE_NAME = '{table_name}' AND TABLE_TYPE = 'BASE TABLE'
+        """
+        self.cur.execute(get_schema_stmt)
+        row = self.cur.fetchone()
+        if row:
+            return row[0]
+        else:
+            # Handle the case where the schema name is not found
+            return None
+
+    def generate_table_embeddings(self):
+        table_names = self.get_all_table_names()
+        table_embeddings = {}
+
+        for table_name in table_names:
+            # Get columns and foreign keys
+            columns_info = self.get_table_definition(table_name)
+            foreign_keys_info = self.get_foreign_keys(table_name)
+
+            # Generate hierarchical embedding (Example: JSON structure)
+            hierarchical_structure = {
+                "table_name": table_name,
+                "columns": columns_info,
+                "foreign_keys": foreign_keys_info
+            }
+            embedding = self.generate_embedding_from_structure(hierarchical_structure)
+            table_embeddings[table_name] = embedding
+
+        return table_embeddings
 
     def get_table_definitions_for_prompt(self):
         table_names = self.get_all_table_names()
@@ -119,9 +164,41 @@ status text,
 totaldurationms bigint
     );"""
 
+    def generate_table_definition_string(self, schem_aname, table_name, columns_info, foreign_keys_info):
+        column_strings = []
+
+        # Create a list of foreign key column names
+        foreign_key_columns = [fk.keys() for fk in foreign_keys_info]
+
+        for column_info in columns_info:
+            column_name, data_type = list(column_info.items())[0]
+            if column_name in [list(fk)[0] for fk in foreign_keys_info]:
+                # Find the corresponding foreign key entry
+                foreign_key_entry = next(fk for fk in foreign_keys_info if column_name in fk.keys())
+                foreign_table_name = foreign_key_entry[column_name]["foreign_table"]
+                foreign_column_name = foreign_key_entry[column_name]["foreign_column"]
+                column_string = f"{column_name}: {data_type} -> {foreign_table_name}.{foreign_column_name}"
+            else:
+                column_string = f"{column_name}: {data_type}"
+
+            column_strings.append(column_string)
+
+        return f"{schem_aname}.{table_name}: {{ {', '.join(column_strings)} }}"
+    
     def get_table_definition_map_for_embeddings(self):
         table_names = self.get_all_table_names()
         definitions = {}
+
         for table_name in table_names:
-            definitions[table_name] = self.get_table_definition(table_name)
+            # Get columns and foreign keys
+            columns_info = self.get_table_definition(table_name)
+            foreign_keys_info = self.get_foreign_keys(table_name)
+
+            schema_name = self.get_schema_name(table_name)
+
+            table_definition_string = self.generate_table_definition_string(schema_name, table_name, columns_info, foreign_keys_info)
+
+            # Generate hierarchical embedding (Example: JSON structure)
+            definitions[table_name] = table_definition_string
+
         return definitions
