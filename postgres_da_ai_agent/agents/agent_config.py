@@ -8,12 +8,31 @@ import argparse
 import autogen
 
 
+cheap_config_list = autogen.config_list_from_models(
+    model_list=["gpt-3.5-turbo"]
+)
+
+cheap_large_config_list = autogen.config_list_from_models(
+    model_list=["gpt-3.5-turbo-16k"]
+)
+
+costly_fast_config_list = autogen.config_list_from_models(
+    model_list=["gpt-4-1106-preview"]
+)
+
+accuracy_config = {
+    "use_cache": False,
+    "temperature": 0,
+    "config_list": costly_fast_config_list,
+    "request_timeout": 120,
+}
+
 # build the gpt_configuration object
 # Base Configuration
 base_config = {
     "use_cache": False,
     "temperature": 0,
-    "config_list": autogen.config_list_from_models(["gpt-4-1106-preview"]),
+    "config_list": cheap_large_config_list,
     "request_timeout": 120,
 }
 
@@ -38,91 +57,10 @@ run_sql_config = {
     ],
 }
 
-# Configuration with "write_file"
-write_file_config = {
-    **base_config,  # Inherit base configuration
-    "functions": [
-        {
-            "name": "write_file",
-            "description": "Write a file to the filesystem",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "fname": {
-                        "type": "string",
-                        "description": "The name of the file to write",
-                    },
-                    "content": {
-                        "type": "string",
-                        "description": "The content of the file to write",
-                    },
-                },
-                "required": ["fname", "content"],
-            },
-        }
-    ],
-}
-
-# Configuration with "write_json_file"
-write_json_file_config = {
-    **base_config,  # Inherit base configuration
-    "functions": [
-        {
-            "name": "write_json_file",
-            "description": "Write a json file to the filesystem",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "fname": {
-                        "type": "string",
-                        "description": "The name of the file to write",
-                    },
-                    "json_str": {
-                        "type": "string",
-                        "description": "The content of the file to write",
-                    },
-                },
-                "required": ["fname", "json_str"],
-            },
-        }
-    ],
-}
-
-write_yaml_file_config = {
-    **base_config,  # Inherit base configuration
-    "functions": [
-        {
-            "name": "write_yml_file",
-            "description": "Write a yml file to the filesystem",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "fname": {
-                        "type": "string",
-                        "description": "The name of the file to write",
-                    },
-                    "json_str": {
-                        "type": "string",
-                        "description": "The json content of the file to write",
-                    },
-                },
-                "required": ["fname", "json_str"],
-            },
-        }
-    ],
-}
-
-
 def create_func_map(name: str, func: callable):
     return {
         name: func,
     }
 
-
 def build_function_map_run_sql(db: PostgresManager):
     return create_func_map("run_sql", db.run_sql)
-
-
-function_map_write_file = create_func_map("write_file", file.write_file)
-function_map_write_json_file = create_func_map("write_json_file", file.write_json_file)
-function_map_write_yaml_file = create_func_map("write_yml_file", file.write_yml_file)
