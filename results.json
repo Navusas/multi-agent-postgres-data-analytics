@@ -1,6 +1,14 @@
 [
     {
         "film_id": 1,
-        "title": "Film 1"
+        "title": "Film 1",
+        "description": "Description 1",
+        "release_year": 2020,
+        "language": "English",
+        "rental_duration": 120,
+        "length": 150,
+        "replacement_cost": "9.99",
+        "rating": "PG-13",
+        "special_features": "Special Feature 1"
     }
 ]

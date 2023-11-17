@@ -52,16 +52,7 @@ class SqlServerManager:
 
     def run_sql(self, sql) -> str:
         self.cur.execute(sql)
-        columns = [desc[0] for desc in self.cur.description]
-        res = self.cur.fetchall()
-
-        list_of_dicts = [dict(zip(columns, row)) for row in res]
-
-        json_result = json.dumps(list_of_dicts, indent=4, default=self.datetime_handler)
-
-        # dump these results to a file
-        with open("results.json", "w") as f:
-            f.write(json_result)
+        # TODO: Check if no errors occured
 
         return "Successfully delivered results to json file"
 
